@@ -9,7 +9,6 @@ import com.parkit.parkingsystem.util.InputReaderUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.sql.SQLException;
 import java.sql.Timestamp;
 
 /**
@@ -57,18 +56,19 @@ public class ParkingService {
 	 * correct nous mettons à jour la base de donnée, afin d'indiquer que cette
 	 * place est désormais prise. Nous initions le ticket avec le type de parking,
 	 * la plaque d'immatriculation et le temps d'entrée afin de l'enregistrer dans
-	 * la base de donnée.
+	 * la base de donnée. Si l'utilisateur est déjà venue alors nous lui indiquons
+	 * qu'il bénéficera d'une réduction à sa sortie.
 	 */
 	try {
 	    ParkingSpot parkingSpot = getNextParkingNumberIfAvailable();
+
 	    if (parkingSpot != null && parkingSpot.getId() > 0) {
 		String vehicleRegNumber = getVehichleRegNumber();
+		Ticket ticket = new Ticket();
 		parkingSpot.setAvailable(false);
 		parkingSpotDAO.updateParking(parkingSpot);
-
 		Timestamp inTime = new Timestamp(System.currentTimeMillis());
-		Ticket ticket = new Ticket();
-		// ID, PARKING_NUMBER, VEHICLE_REG_NUMBER, PRICE, IN_TIME, OUT_TIME)
+
 		ticket.setParkingSpot(parkingSpot);
 		ticket.setVehicleRegNumber(vehicleRegNumber);
 		ticket.setInTimestamp(inTime);
@@ -76,7 +76,12 @@ public class ParkingService {
 		System.out.println("Generated Ticket and saved in DB");
 		System.out.println("Please park your vehicle in spot number: " + parkingSpot.getId());
 		System.out.println("Recorded in-time for vehicle number: " + vehicleRegNumber + " is: " + inTime);
+		if (ticketDAO.getTicketUserPresentInDB(vehicleRegNumber)) {
+		    System.out.println(
+			    "You have already come at least once, if you stay more than 30min you will benefit from a 5% discount when you go out");
+		}
 	    }
+
 	} catch (Exception e) {
 	    logger.error("Unable to process incoming vehicle", e);
 	    throw e;
@@ -156,23 +161,30 @@ public class ParkingService {
      * indiqué par l'utilisateur. Récupère les informations d'entrée sur le ticket
      * correspondant dans la base de donnée. Initie le temps de sortie sur le
      * ticket. Fait appel au service de calcul afin de calculer le tarif en fonction
-     * du ticket. Mets à jour le ticket dans la base de donnée. Mets à jour le
+     * du ticket. Si l'utilisateur est déjà venue, alors la réduction de 5% est
+     * appliquée. Mets à jour le ticket dans la base de donnée. Mets à jour le
      * parking dans la base de donnée. Indique à l'utilisateur le tarif à payer.
      * Envoi un message d'erreur si le ticket ne se mets pas à jour.
      * 
-     * @throws SQLException erreur d'accès à la base de donnée.
-     * @throws Exception    si on arrive pas à vérifier l'existence d'un ticket pour
-     *                      ce véhicule.
+     * @throws Exception si on arrive pas à vérifier l'existence d'un ticket pour ce
+     *                   véhicule.
      */
-    public void processExitingVehicle() throws SQLException, Exception {
+    public void processExitingVehicle() throws Exception {
 	try {
 	    String vehicleRegNumber = getVehichleRegNumber();
 	    Timestamp outTime = new Timestamp(System.currentTimeMillis());
 	    Ticket ticket = ticketDAO.getTicket(vehicleRegNumber);
 	    ticket.setOutTimestamp(outTime);
 	    fareCalculatorService.calculateFare(ticket);
-
+	    if (ticketDAO.getTicketUserPresentInDB(vehicleRegNumber) && ticket.getPrice() > 0.0) {
+		double reduction = ticket.getPrice() * 5 / 100;
+		double applyReduction = ticket.getPrice() - reduction;
+		double convertPrice = (double) Math.round(applyReduction * 100) / 100;
+		ticket.setPrice(convertPrice);
+		System.out.println("You are entitled to a 5% discount applied immediately for your recurring use of our parking");
+	    }
 	    if (ticketDAO.updateTicket(ticket) == true) {
+
 		ParkingSpot parkingSpot = ticket.getParkingSpot();
 		parkingSpot.setAvailable(true);
 		parkingSpotDAO.updateParking(parkingSpot);
@@ -182,6 +194,7 @@ public class ParkingService {
 	    } else {
 		System.out.println("Unable to update ticket information. Error occurred");
 	    }
+
 	} catch (Exception e) {
 	    logger.error("Unable to process exiting vehicle", e);
 	    throw e;

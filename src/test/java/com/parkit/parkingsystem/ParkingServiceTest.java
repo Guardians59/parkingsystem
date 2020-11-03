@@ -45,14 +45,11 @@ public class ParkingServiceTest {
 
     @Test
     @DisplayName("Entrée place N°17 disponible pour une voiture")
-    public void processIncomingVehicleCarTest() throws IllegalArgumentException, Exception {
+    public void testProcessIncomingVehicleCar() throws Exception {
 	// GIVEN
-	when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
+	when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEFC");
 	when(inputReaderUtil.readSelection()).thenReturn(1);
 	when(parkingSpotDAO.getNextAvailableSlot(any(ParkingType.class))).thenReturn(17);
-	ticket.setInTimestamp(new Timestamp(System.currentTimeMillis()));
-	ticket.setParkingSpot(parkingSpot);
-	ticket.setVehicleRegNumber("ABCDEF");
 	when(ticketDAO.saveTicket(any(Ticket.class))).thenReturn(ticket);
 	when(parkingSpotDAO.updateParking(any(ParkingSpot.class))).thenReturn(true);
 	// WHEN
@@ -67,14 +64,11 @@ public class ParkingServiceTest {
 
     @Test
     @DisplayName("Entrée place N°17 disponible pour une moto")
-    public void processIncomingVehicleBikeTest() throws Exception {
+    public void testProcessIncomingVehicleBike() throws Exception {
 	// GIVEN
 	when(inputReaderUtil.readSelection()).thenReturn(2);
-	when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
+	when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEFM");
 	when(parkingSpotDAO.getNextAvailableSlot(any(ParkingType.class))).thenReturn(17);
-	ticket.setInTimestamp(new Timestamp(System.currentTimeMillis()));
-	ticket.setParkingSpot(parkingSpot);
-	ticket.setVehicleRegNumber("ABCDEF");
 	when(ticketDAO.saveTicket(any(Ticket.class))).thenReturn(ticket);
 	when(parkingSpotDAO.updateParking(any(ParkingSpot.class))).thenReturn(true);
 	// WHEN
@@ -87,13 +81,10 @@ public class ParkingServiceTest {
 
     @Test
     @DisplayName("Erreur place indisponible")
-    public void processIncomingVehicleDontSpotTest() throws Exception {
+    public void testProcessIncomingVehicleDontSpot() throws Exception {
 	// GIVEN
 	when(inputReaderUtil.readSelection()).thenReturn(1);
 	when(parkingSpotDAO.getNextAvailableSlot(any(ParkingType.class))).thenReturn(0);
-	ticket.setInTimestamp(new Timestamp(System.currentTimeMillis()));
-	ticket.setParkingSpot(parkingSpot);
-	ticket.setVehicleRegNumber("ABCDEF");
 	// WHEN
 
 	// THEN
@@ -104,7 +95,7 @@ public class ParkingServiceTest {
 
     @Test
     @DisplayName("Erreur du choix du type de véhicule")
-    public void getVehicleTypeErrorTest() throws Exception {
+    public void testGetVehicleTypeError() throws Exception {
 	// GIVEN
 	when(inputReaderUtil.readSelection()).thenThrow(new Exception());
 	// WHEN
@@ -116,16 +107,14 @@ public class ParkingServiceTest {
 
     @Test
     @DisplayName("Sortie du véhicule avec le bon tarif")
-    public void processExitingVehicleTest() throws Exception {
+    public void testProcessExitingVehicleCar() throws Exception {
 	// GIVEN
 	Timestamp inTime = new Timestamp(System.currentTimeMillis() - 3600000);
-	Timestamp outTimes = new Timestamp(System.currentTimeMillis());
-	when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
+	when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEFC2");
 	ticket.setInTimestamp(inTime);
 	ticket.setParkingSpot(parkingSpot);
-	ticket.setVehicleRegNumber("ABCDEF");
+	ticket.setVehicleRegNumber("ABCDEFC2");
 	when(ticketDAO.getTicket(anyString())).thenReturn(ticket);
-	ticket.setOutTimestamp(outTimes);
 	when(ticketDAO.updateTicket(any(Ticket.class))).thenReturn(true);
 	when(parkingSpotDAO.updateParking(any(ParkingSpot.class))).thenReturn(true);
 	// WHEN
@@ -137,17 +126,15 @@ public class ParkingServiceTest {
 
     @Test
     @DisplayName("Sortie d'une moto avec le bon tarif")
-    public void processExitingBikeTest() throws Exception {
+    public void testProcessExitingBike() throws Exception {
 	// GIVEN
 	ParkingSpot parkingSpot = new ParkingSpot(3, ParkingType.BIKE, false);
 	Timestamp inTime = new Timestamp(System.currentTimeMillis() - 3600000);
-	Timestamp outTimes = new Timestamp(System.currentTimeMillis());
-	when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
+	when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF2");
 	ticket.setInTimestamp(inTime);
 	ticket.setParkingSpot(parkingSpot);
-	ticket.setVehicleRegNumber("ABCDEF");
+	ticket.setVehicleRegNumber("ABCDEF2");
 	when(ticketDAO.getTicket(anyString())).thenReturn(ticket);
-	ticket.setOutTimestamp(outTimes);
 	when(ticketDAO.updateTicket(any(Ticket.class))).thenReturn(true);
 	when(parkingSpotDAO.updateParking(any(ParkingSpot.class))).thenReturn(true);
 	// WHEN
@@ -159,7 +146,7 @@ public class ParkingServiceTest {
 
     @Test
     @DisplayName("Erreur de lecture de la plaque lors de la sortie du véhicule")
-    public void processExitingVehicleReadErrorTest() throws Exception {
+    public void testProcessExitingVehicleReadError() throws Exception {
 	// GIVEN
 	when(inputReaderUtil.readVehicleRegistrationNumber()).thenThrow(new IllegalArgumentException());
 	// WHEN
@@ -170,17 +157,15 @@ public class ParkingServiceTest {
     }
 
     @Test
-    @DisplayName("Erreur lors de la sortie du véhicule")
-    public void processExitingVehicleErrorTest() throws Exception {
+    @DisplayName("Erreur lors de la mis à jour du ticket")
+    public void testProcessExitingVehicleError() throws Exception {
 	// GIVEN
 	Timestamp inTime = new Timestamp(System.currentTimeMillis() - 3600000);
-	Timestamp outTimes = new Timestamp(System.currentTimeMillis());
-	when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
+	when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEFE2");
 	ticket.setInTimestamp(inTime);
 	ticket.setParkingSpot(parkingSpot);
-	ticket.setVehicleRegNumber("ABCDEF");
+	ticket.setVehicleRegNumber("ABCDEFE2");
 	when(ticketDAO.getTicket(anyString())).thenReturn(ticket);
-	ticket.setOutTimestamp(outTimes);
 	when(ticketDAO.updateTicket(any(Ticket.class))).thenReturn(false);
 	// WHEN
 	parkingService.processExitingVehicle();
@@ -189,4 +174,43 @@ public class ParkingServiceTest {
 
     }
 
+    @Test
+    @DisplayName("Réduction pour une voiture")
+    public void testCarReduction() throws Exception {
+	// GIVEN
+	Timestamp inTime = new Timestamp(System.currentTimeMillis() - 3600000);
+	when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEFC2");
+	ticket.setInTimestamp(inTime);
+	ticket.setParkingSpot(parkingSpot);
+	ticket.setVehicleRegNumber("ABCDEFC2");
+	when(ticketDAO.getTicket(anyString())).thenReturn(ticket);
+	when(ticketDAO.getTicketUserPresentInDB("ABCDEFC2")).thenReturn(true);
+	when(ticketDAO.updateTicket(any(Ticket.class))).thenReturn(true);
+	when(parkingSpotDAO.updateParking(any(ParkingSpot.class))).thenReturn(true);
+	// WHEN
+	parkingService.processExitingVehicle();
+	// THEN
+	assertThat(ticket.getPrice()).isEqualTo(1.43);
+    }
+
+    @Test
+    @DisplayName("Réduction pour une moto")
+    public void testBikeReduction() throws Exception {
+	// GIVEN
+	ParkingSpot parkingSpot = new ParkingSpot(3, ParkingType.BIKE, false);
+	Timestamp inTime = new Timestamp(System.currentTimeMillis() - 3600000);
+	when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF2");
+	ticket.setInTimestamp(inTime);
+	ticket.setParkingSpot(parkingSpot);
+	ticket.setVehicleRegNumber("ABCDEF2");
+	when(ticketDAO.getTicket(anyString())).thenReturn(ticket);
+	when(ticketDAO.getTicketUserPresentInDB("ABCDEF2")).thenReturn(true);
+	when(ticketDAO.updateTicket(any(Ticket.class))).thenReturn(true);
+	when(parkingSpotDAO.updateParking(any(ParkingSpot.class))).thenReturn(true);
+	// WHEN
+	parkingService.processExitingVehicle();
+	//THEN
+	assertThat(ticket.getPrice()).isEqualTo(0.95);
+    }
+    
 }

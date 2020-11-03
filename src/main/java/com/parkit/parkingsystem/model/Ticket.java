@@ -17,6 +17,9 @@ public class Ticket {
     private double price;
     private Timestamp inTimestamp;
     private Timestamp outTimestamp;
+    
+
+   
 
     /**
      * Récupère l'ID du ticket.
@@ -129,4 +132,5 @@ public class Ticket {
     public void setOutTimestamp(Timestamp outTimestamp) {
 	this.outTimestamp = outTimestamp;
     }
+    
 }

@@ -30,7 +30,7 @@ public class FareCalculatorServiceTest {
 
     @Test
     @DisplayName("Calcul du tarif pour une durée de stationnement de 1h pour une voiture")
-    public void calculateFareCar() {
+    public void calculateFareCar() throws Exception {
 	// GIVEN
 	Timestamp inTime = new Timestamp(System.currentTimeMillis());
 	Timestamp outTime = new Timestamp((System.currentTimeMillis() + 3600000));
@@ -46,7 +46,7 @@ public class FareCalculatorServiceTest {
 
     @Test
     @DisplayName("Calcul du tarif pour une durée de stationnement de 2H pour une moto")
-    public void calculateFareBike() {
+    public void calculateFareBike() throws Exception {
 	// GIVEN
 	Timestamp inTime = new Timestamp(System.currentTimeMillis());
 	Timestamp outTime = new Timestamp((System.currentTimeMillis() + 7200000));
@@ -94,7 +94,7 @@ public class FareCalculatorServiceTest {
 
     @Test
     @DisplayName("Calcul du tarif pour une durée de stationnement de 45Min avec une moto")
-    public void calculateFareBikeWithLessThanOneHourParkingTime() {
+    public void calculateFareBikeWithLessThanOneHourParkingTime() throws Exception {
 	// GIVEN
 	Timestamp inTime = new Timestamp(System.currentTimeMillis());
 	Timestamp outTime = new Timestamp((System.currentTimeMillis() + 2700000));
@@ -110,7 +110,7 @@ public class FareCalculatorServiceTest {
 
     @Test
     @DisplayName("Calcul du tarif pour une durée de stationnement de 45min avec une voiture")
-    public void calculateFareCarWithLessThanOneHourParkingTime() {
+    public void calculateFareCarWithLessThanOneHourParkingTime() throws Exception {
 	// GIVEN
 	Timestamp inTime = new Timestamp(System.currentTimeMillis());
 	Timestamp outTime = new Timestamp((System.currentTimeMillis() + 2700000));
@@ -127,7 +127,7 @@ public class FareCalculatorServiceTest {
 
     @Test
     @DisplayName("Calcul du tarif pour une durée de stationnement de 25H30Min avec une voiture")
-    public void calculateFareCarWithMoreThanADayParkingTime() {
+    public void calculateFareCarWithMoreThanADayParkingTime() throws Exception {
 	// GIVEN
 	Timestamp inTime = new Timestamp(System.currentTimeMillis());
 	Timestamp outTime = new Timestamp((System.currentTimeMillis() + 91800000));
@@ -144,7 +144,7 @@ public class FareCalculatorServiceTest {
 
     @Test
     @DisplayName("Calcul du tarif pour une durée de stationnement de 24H10Min avec une moto")
-    public void calculateFareBikeWithMoreThanADayParkingTime() {
+    public void calculateFareBikeWithMoreThanADayParkingTime() throws Exception {
 	// GIVEN
 	Timestamp inTime = new Timestamp(System.currentTimeMillis());
 	Timestamp outTime = new Timestamp((System.currentTimeMillis() + 87000000));
@@ -163,7 +163,7 @@ public class FareCalculatorServiceTest {
 
     @Test
     @DisplayName("Stationnement 30min gratuit voiture")
-    public void calculateParking30minOrLessCar() {
+    public void calculateParking30minOrLessCar() throws Exception {
 	Timestamp inTime = new Timestamp(System.currentTimeMillis());
 	Timestamp outTime = new Timestamp((System.currentTimeMillis() + 1800000));
 	ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR, false);
@@ -178,7 +178,7 @@ public class FareCalculatorServiceTest {
 
     @Test
     @DisplayName("Stationnement 31min parking payant voiture")
-    public void calculate31minCar() {
+    public void calculate31minCar() throws Exception {
 	Timestamp inTime = new Timestamp(System.currentTimeMillis());
 	Timestamp outTime = new Timestamp((System.currentTimeMillis() + 1860000));
 	ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR, false);
@@ -193,7 +193,7 @@ public class FareCalculatorServiceTest {
     
     @Test
     @DisplayName("Moins de 30min moto")
-    public void calculateParking30minOrLessBike() {
+    public void calculateParking30minOrLessBike() throws Exception {
 	Timestamp inTime = new Timestamp(System.currentTimeMillis());
 	Timestamp outTime = new Timestamp((System.currentTimeMillis() + 1800000));
 	ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.BIKE, false);
@@ -208,7 +208,7 @@ public class FareCalculatorServiceTest {
     
     @Test
     @DisplayName("Stationnement 31min parking payant moto")
-    public void calculate31minBike() {
+    public void calculate31minBike() throws Exception {
 	Timestamp inTime = new Timestamp(System.currentTimeMillis());
 	Timestamp outTime = new Timestamp((System.currentTimeMillis() + 1860000));
 	ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.BIKE, false);

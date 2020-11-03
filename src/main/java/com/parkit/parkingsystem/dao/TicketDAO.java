@@ -51,6 +51,7 @@ public class TicketDAO {
 	try {
 	    con = dataBaseConfig.getConnection();
 	    ps = con.prepareStatement(DBConstants.SAVE_TICKET);
+
 	    ps.setInt(1, ticket.getParkingSpot().getId());
 	    ps.setString(2, ticket.getVehicleRegNumber());
 	    ps.setDouble(3, ticket.getPrice());
@@ -61,6 +62,55 @@ public class TicketDAO {
 	} catch (Exception ex) {
 	    logger.error("Error fetching next available slot", ex);
 	} finally {
+	    dataBaseConfig.closePreparedStatement(ps);
+	    dataBaseConfig.closeConnection(con);
+	}
+	return ticket;
+    }
+
+    /**
+     * Permet de récuperer un ticket. Connection à la base de donnée.
+     * 
+     * Connexion à la base de donnée. PrepareStatement avec la requête SQL
+     * get_ticket présente dans la DBConstants. Prépare la requête de recherche avec
+     * le numéro d'immatriculation. Récupère les informations du ticket lié au
+     * numéro d'immatriculation. Indique sur le ticket les informations du parking
+     * avec le numéro et le type de véhicule, l'ID généré par la base de donnée, la
+     * plaque d'immatriculation, le prix à payer, le temps d'entrée ainsi que le
+     * temps de sortie. Une erreur si le ticket n'est pas trouvé. Ferme les
+     * connections dans le finally afin de s'assurer de l'exécution de celles-ci.
+     * 
+     * @see DBConstants
+     * 
+     * @param vehicleRegNumber le numéro d'immatriculation du véhicule.
+     * @return le ticket avec toutes les informations.
+     * @throws Exception si une erreur est rencontrée lors de la recherche du
+     *                   ticket.
+     */
+    public Ticket getTicket(String vehicleRegNumber) throws Exception {
+	Connection con = null;
+	PreparedStatement ps = null;
+	ResultSet rs = null;
+	Ticket ticket = new Ticket();
+	try {
+	    con = dataBaseConfig.getConnection();
+	    ps = con.prepareStatement(DBConstants.GET_TICKET, ResultSet.TYPE_SCROLL_SENSITIVE,
+		    ResultSet.CONCUR_READ_ONLY);
+	    ps.setString(1, vehicleRegNumber);
+	    rs = ps.executeQuery();
+	    if (rs.last()) {
+		ParkingSpot parkingSpot = new ParkingSpot(rs.getInt(2), ParkingType.valueOf(rs.getString(6)), false);
+		ticket.setId(rs.getInt(1));
+		ticket.setParkingSpot(parkingSpot);
+		ticket.setVehicleRegNumber(vehicleRegNumber);
+		ticket.setPrice(rs.getDouble(3));
+		ticket.setInTimestamp(rs.getTimestamp(4));
+		ticket.setOutTimestamp(rs.getTimestamp(5));
+	    }
+	} catch (Exception ex) {
+	    logger.error("Error unable to retrieve the ticket corresponding to the registration number", ex);
+	} finally {
+	    dataBaseConfig.closeResultSet(rs);
 	    dataBaseConfig.closePreparedStatement(ps);
 	    dataBaseConfig.closeConnection(con);
 	}
@@ -91,71 +141,74 @@ public class TicketDAO {
     public boolean updateTicket(Ticket ticket) throws Exception {
 	Connection con = null;
 	PreparedStatement ps = null;
-	int result = 0;
 	try {
 	    con = dataBaseConfig.getConnection();
 	    ps = con.prepareStatement(DBConstants.UPDATE_TICKET);
 	    ps.setDouble(1, ticket.getPrice());
 	    ps.setTimestamp(2, ticket.getOutTimestamp());
-	    ps.setString(3, ticket.getVehicleRegNumber());
+	    ps.setInt(3, ticket.getId());
 	    ps.executeUpdate();
-	    result = ps.executeUpdate();
+	    return true;
 	} catch (Exception ex) {
 	    logger.error("Error saving ticket info", ex);
+	    return false;
 	} finally {
 	    dataBaseConfig.closePreparedStatement(ps);
 	    dataBaseConfig.closeConnection(con);
 	}
-	if (result == 2) {
-	    return true;
-	} else {
-	    return false;
-	}
+
     }
 
     /**
-     * Permet de récuperer un ticket. Connection à la base de donnée.
+     * Permet de vérifier si l'utilisateur est présent en base de donnée, via son
+     * numéro d'immatriculation.
      * 
-     * PrepareStatement avec la requête SQL get_ticket présente dans la DBConstants.
-     * Prépare la requête de recherche avec le numéro d'immatriculation. Récupère
-     * les informations du ticket lié au numéro d'immatriculation. Indique sur le
-     * ticket les informations du parking avec le numéro et le type de véhicule, la
-     * plaque d'immatriculation, le prix à payer, le temps d'entrée ainsi que le
-     * temps de sortie. Une erreur si le ticket n'est pas trouvé. Ferme les
-     * connections dans le finally afin de s'assurer de l'exécution de celles-ci.
+     * Connexion à la base de donnée. PreparedStatement avec la requête SQL
+     * GET_VEHICLE_REG_NUMBER présente dans la DBConstants. Prépare la requête de
+     * recherche avec le numéro d'immatriculation. Récupère le nombre de ligne
+     * correspondante au nombre de ticket enregistré avec le numéro
+     * d'immatriculation. Si il y a au moins une ligne de trouvée cela renvoie true
+     * pour confirmer que l'utilisateur est bien présent. Une erreur si la recherche
+     * échoue. Ferme les connections dans le finally afin de s'assurer de
+     * l'exécution de celles-ci.
      * 
      * @see DBConstants
      * 
-     * @param vehicleRegNumber le numéro d'immatriculation du véhicule.
-     * @return le ticket avec toutes les informations.
-     * @throws Exception si une erreur est rencontrée lors de la recherche du
-     *                   ticket.
+     * @param vehicleRegNumber le numéro d'immatriculation de l'utilisateur.
+     * @return result true si l'utilisateur est déjà venue, false si c'est la
+     *         première fois.
+     * @throws Exception si une erreur est rencontrée lors de la recherche.
      */
-    public Ticket getTicket(String vehicleRegNumber) throws Exception {
+
+    public boolean getTicketUserPresentInDB(String vehicleRegNumber) throws Exception {
 	Connection con = null;
 	PreparedStatement ps = null;
 	ResultSet rs = null;
-	Ticket ticket = new Ticket();
+	boolean result = false;
+	int numberRow = -1;
 	try {
 	    con = dataBaseConfig.getConnection();
-	    ps = con.prepareStatement(DBConstants.GET_TICKET);
+	    ps = con.prepareStatement(DBConstants.GET_VEHICLE_REG_NUMBER);
 	    ps.setString(1, vehicleRegNumber);
 	    rs = ps.executeQuery();
-	    if (rs.next()) {
-		ParkingSpot parkingSpot = new ParkingSpot(rs.getInt(2), ParkingType.valueOf(rs.getString(6)), false);
-		ticket.setParkingSpot(parkingSpot);
-		ticket.setVehicleRegNumber(vehicleRegNumber);
-		ticket.setPrice(rs.getDouble(3));
-		ticket.setInTimestamp(rs.getTimestamp(4));
-		ticket.setOutTimestamp(rs.getTimestamp(5));
+
+	    while (rs.next()) {
+		numberRow = rs.getInt("count(*)");
 	    }
+
+	    if (numberRow >= 1) {
+		result = true;
+	    }
+
 	} catch (Exception ex) {
-	    logger.error("Error unable to retrieve the ticket corresponding to the registration number", ex);
+	    logger.error("Error when looking for an old ticket", ex);
+
 	} finally {
 	    dataBaseConfig.closeResultSet(rs);
 	    dataBaseConfig.closePreparedStatement(ps);
 	    dataBaseConfig.closeConnection(con);
 	}
-	return ticket;
+	return result;
+
     }
 }
