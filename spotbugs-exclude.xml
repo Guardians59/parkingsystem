@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter
+xmlns="https://github.com/spotbugs/filter/3.0.0">
+	
+	<Match>
+		<Bug pattern="DMI_CONSTANT_DB_PASSWORD"/>
+	</Match>
+	
+	<Match>
+		<Bug category="EXPERIMENTAL"/>
+	</Match>
+	
+	<Match>
+		<Bug category="MALICIOUS_CODE"/>
+	</Match>
+	
+</FindBugsFilter>
